@@ -7,8 +7,8 @@ import aiohttp
 import io
 import os
 
-TOKEN = os.getenv("TOKEN")  # Use Railway variable
-WELCOME_CHANNEL_ID = 1472224372382109905
+TOKEN = os.getenv("TOKEN")
+WELCOME_CHANNEL_ID = 1472224372382109905  # change if needed
 
 intents = discord.Intents.default()
 intents.members = True
@@ -19,7 +19,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print("BOT STARTED CLEAN")
+    print("WELCOME BOT READY")
     print(f"Logged in as {bot.user}")
 
 
@@ -29,8 +29,8 @@ async def create_welcome_gif(member):
     frames = []
 
     try:
-        font_big = ImageFont.truetype("arial.ttf", 75)
-        font_small = ImageFont.truetype("arial.ttf", 34)
+        font_big = ImageFont.truetype("arial.ttf", 64)
+        font_small = ImageFont.truetype("arial.ttf", 30)
         font_logo = ImageFont.truetype("arial.ttf", 170)
     except:
         font_big = ImageFont.load_default()
@@ -50,48 +50,56 @@ async def create_welcome_gif(member):
     avatar = avatar.resize((65, 65))
 
     mask = Image.new("L", (65, 65), 0)
-    mask_draw = ImageDraw.Draw(mask)
-    mask_draw.ellipse((0, 0, 65, 65), fill=255)
+    ImageDraw.Draw(mask).ellipse((0, 0, 65, 65), fill=255)
     avatar.putalpha(mask)
 
     total_frames = 40
 
     for i in range(total_frames):
 
-        img = Image.new("RGBA", (width, height), (0, 0, 0, 255))
+        img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
 
-        # BIG WELCOME TEXT
-        draw.text((80, 70), f"Welcome {username}.", font=font_big, fill=(255, 255, 255))
+        # Welcome text
+        draw.text((120, 60), f"Welcome {username}", font=font_big, fill=(255, 255, 255, 255))
 
-        # AVATAR
-        img.paste(avatar, (80, 165), avatar)
+        # Avatar
+        img.paste(avatar, (120, 150), avatar)
 
-        # MEMBER INFO
-        draw.text((165, 170), member_count, font=font_small, fill=(180, 180, 255))
-        draw.text((165, 205), join_time, font=font_small, fill=(180, 180, 255))
+        # Member info
+        draw.text((200, 155), member_count, font=font_small, fill=(180, 180, 255, 255))
+        draw.text((200, 190), join_time, font=font_small, fill=(180, 180, 255, 255))
 
-        # AS LOGO MOVEMENT
-        movement_range = 2
-        offset_x = int(math.sin(i / 16) * movement_range)
+        # AS logo
+        movement_range = 3
+        offset_x = int(math.sin(i / 12) * movement_range)
 
-        logo_x = width - 300 + offset_x
-        logo_y = 40
+        logo_x = width - 280 + offset_x
+        logo_y = 50
 
-        # Glow pulse
         pulse = (math.sin(i / 8) + 1) / 2
-        glow_alpha = int(180 + pulse * 60)
+        glow_alpha = int(160 + pulse * 95)
 
         glow_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         glow_draw = ImageDraw.Draw(glow_layer)
 
-        glow_draw.text((logo_x, logo_y), "AS", font=font_logo, fill=(255, 255, 255, glow_alpha))
-        glow_layer = glow_layer.filter(ImageFilter.GaussianBlur(8))
+        glow_draw.text(
+            (logo_x, logo_y),
+            "AS",
+            font=font_logo,
+            fill=(255, 255, 255, glow_alpha)
+        )
 
+        glow_layer = glow_layer.filter(ImageFilter.GaussianBlur(8))
         img = Image.alpha_composite(img, glow_layer)
 
         draw = ImageDraw.Draw(img)
-        draw.text((logo_x, logo_y), "AS", font=font_logo, fill=(255, 255, 255))
+        draw.text(
+            (logo_x, logo_y),
+            "AS",
+            font=font_logo,
+            fill=(255, 255, 255, 255)
+        )
 
         frames.append(img)
 
@@ -110,30 +118,29 @@ async def create_welcome_gif(member):
 
 
 # ---------------- EVENTS ----------------
+async def send_welcome(channel, member):
+    gif = await create_welcome_gif(member)
+
+    message_text = (
+        f"{member.mention}, Welcome to Arab’s Studio — we’re glad to have you here!\n\n"
+        "Take a look around and explore the server 🚀"
+    )
+
+    await channel.send(
+        content=message_text,
+        file=discord.File(gif)
+    )
+
+
 @bot.event
 async def on_member_join(member):
     channel = bot.get_channel(WELCOME_CHANNEL_ID)
-
-    gif = await create_welcome_gif(member)
-
-    await channel.send(
-        content=f"{member.mention} , Welcome to Arab’s Studio — we’re glad to have you here!",
-        file=discord.File(gif)
-    )
+    await send_welcome(channel, member)
 
 
 @bot.command()
 async def testwelcome(ctx):
-    member = ctx.author
-
-    gif = await create_welcome_gif(member)
-
-    await ctx.send(
-        content=f"{member.mention} , Welcome to Arab’s Studio — we’re glad to have you here!",
-        file=discord.File(gif)
-    )
+    await send_welcome(ctx.channel, ctx.author)
 
 
 bot.run(TOKEN)
-
-
