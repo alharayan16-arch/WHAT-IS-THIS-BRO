@@ -58,7 +58,7 @@ async def create_welcome_gif(member):
 
     for i in range(total_frames):
 
-        img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        img = Image.new("RGBA", (width, height), (30, 30, 30, 255))
         draw = ImageDraw.Draw(img)
 
         # Main title
@@ -97,13 +97,14 @@ async def create_welcome_gif(member):
     gif_path = f"welcome_{member.id}.gif"
 
     frames[0].save(
-        gif_path,
-        save_all=True,
-        append_images=frames[1:],
-        duration=60,
-        loop=0,
-        disposal=2
-    )
+    gif_path,
+    save_all=True,
+    append_images=frames[1:],
+    duration=60,
+    loop=0,
+    disposal=2,
+    transparency=0
+)
 
     return gif_path
 
@@ -134,3 +135,4 @@ async def testwelcome(ctx):
 
 
 bot.run(TOKEN)
+
